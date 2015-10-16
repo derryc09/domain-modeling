@@ -20,6 +20,12 @@ class Person {
         self.firstName = firstName
         self.lastName = lastName
         self.age = age
+        if(age < 16){
+            self.job = nil
+        }
+        if(age < 18){
+            self.spouse = nil
+        }
     }
     
     func toString() {
