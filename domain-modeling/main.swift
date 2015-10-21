@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Person {
+class Person: CustomStringConvertible{
     
     let firstName : String
     let lastName: String
@@ -39,10 +39,15 @@ class Person {
             print("Spouse: \(self.spouse!.firstName) \(self.spouse!.lastName)")
         }
     }
+    var description: String {
+        return ("Name:\(lastName),\(firstName), Age:\(age), ") + (job != nil ? "Job:" + job!.title + "," : "") + (spouse != nil ? "Spouse: " + spouse!.firstName  : "")
+    }
+    
+    
     
 }
 
-class Job{
+class Job: CustomStringConvertible{
     let title : String
     var salaryHour : Double?
     var salaryYear : Double?
@@ -67,10 +72,13 @@ class Job{
             return (1 + percentage/100) * Double(self.salaryHour!)
         }
     }
+    var description: String {
+        return ("Title: \(title)") + (salaryHour != nil ? ", Hourly Salary: " + String(salaryHour!)  : "") + (salaryYear != nil ? ", Yearly Salary: " + String(salaryYear!)  : "")
+    }
 }
 
 
-class Family{
+class Family: CustomStringConvertible{
     var person : Person?
     var members : [Person]
     
@@ -108,11 +116,28 @@ class Family{
             print("")
         }
     }
+    var tempString: String = ""
+    func membersString() -> String{
+        for(var i = 0; i < members.count; i++){
+            if(i == 0){
+                tempString += (members[0].firstName)
+            } else {
+                tempString = (tempString + ", " + members[i].firstName)
+                
+            }
+        }
+        return tempString
+    }
+    
+    var description: String {
+        return ("Members include: " + membersString())
+    }
+    
 }
 
-struct Money{
-    let amount : Double
-    let currency : String
+struct Money: CustomStringConvertible, Mathematics{
+    var amount : Double
+    var currency : String
     init (amount: Double, currency : String){
         if(currency == "USD" || currency == "CAN" || currency == "GBP" || currency == "EUR"){
             self.amount = amount
@@ -126,6 +151,8 @@ struct Money{
         }
     }
     
+    
+    
     func convert(to: String) -> Double{
         if(to == "USD" || to == "CAN" || to == "GBP" || to == "EUR"){
             var fromCurrency : Double
@@ -136,6 +163,8 @@ struct Money{
                 fromCurrency = self.amount/0.5
             case "CAN" :
                 fromCurrency = self.amount/1.25
+            case "YEN" :
+                fromCurrency = self.amount/120
             default:
                 fromCurrency = self.amount
             }
@@ -147,6 +176,8 @@ struct Money{
                 toCurrency = fromCurrency*0.5
             case "CAN":
                 toCurrency = fromCurrency*1.25
+            case "YEN":
+                toCurrency = fromCurrency*120
             default:
                 toCurrency = fromCurrency
             }
@@ -196,153 +227,138 @@ struct Money{
         print("The result output is in this currency: \(currency)")
         return resultAmount!
     }
+    var description: String {
+        return ("\(currency)" + String(amount))
+    }
+    
+    func addMoney(money: Money) -> Money{
+        var resultMoney = Money(amount: 0, currency: "CAN")
+        if(money.currency != self.currency){
+            let convertedAmount = self.convert(money.currency)
+            resultMoney.amount = convertedAmount + money.amount
+            resultMoney.currency = money.currency
+        } else{
+            resultMoney.amount = self.amount + money.amount
+            resultMoney.currency = self.currency
+        }
+        return resultMoney
+    }
+    
+    func subtractMoney(money: Money) -> Money{
+        var resultMoney = Money(amount: 0, currency: "CAN")
+        if(money.currency != self.currency){
+            let convertedAmount = self.convert(money.currency)
+            resultMoney.amount = convertedAmount - money.amount
+            resultMoney.currency = money.currency
+        } else{
+            resultMoney.amount = self.amount - money.amount
+            resultMoney.currency = self.currency
+        }
+        return resultMoney
+    }
+}
+
+protocol CustomStringConvertible{
+    var description: String { get }
     
 }
-var Derry = Person(firstName: "Derry", lastName: "Cheng", age: 22)
-var Brian = Person(firstName: "Brian", lastName: "Hawkins", age: 23)
-var Andrew = Person(firstName: "Andrew", lastName: "Before", age: 53)
-var Vivian = Person(firstName: "Vivian", lastName: "Woods", age: 20)
-var April = Person(firstName: "April", lastName: "Seaburg", age: 43)
+protocol Mathematics{
+    func addMoney (money: Money) -> Money
+    func subtractMoney (money: Money) -> Money
+}
+
+extension Double {
+    var USD: Money {
+        return Money(amount: self, currency: "USD")
+    }
+    var EUR: Money {
+        return Money(amount: self, currency: "EUR")
+    }
+    var GBP: Money {
+        return Money(amount: self, currency: "GBP")
+    }
+    var YEN: Money {
+        return Money(amount: self, currency: "YEN")
+    }
+    var CAN: Money{
+        return Money(amount: self, currency: "CAN")
+    }
+}
+
+print("     declare Person")
+var me = Person(firstName: "Derry", lastName: "Cheng", age: 24)
+print("     print Derry using Description, should include Spouse information")
+
+print(me.description)
+
+print("     declare Person Benny")
 var Benny = Person(firstName: "Benny", lastName: "Lam", age: 24)
+print("     print Person using Description")
 
+print(Benny.description)
+print("     set Derry's spouse as Benny")
+me.spouse = Benny
+print("     print Derry using description")
+print(me.description)
+print("     declare Person Andrew")
+var Andrew = Person(firstName: "Andrew", lastName: "Yu", age: 24)
+print("     print Person using Description")
+print(Andrew.description)
+print("     declare empty Family. Should pop up illegal Family notice")
+var Fam = Family(members: [Person]())
+print("     print empty Family using Description. Should be empty")
+print(Fam.description)
 
-var MacBookAir = Money(amount: 1500, currency: "USD")
-print("         // declared  Money                                          PASSED")
+print("     adding 3 Family members: Derry, Andrew, Benny")
 
-print(MacBookAir.convert("CAN"))
-print("         // converted  Money                                         PASSED")
-
-var iPhone = Money(amount: 1000, currency: "USD")
-print(iPhone.add(3000, currency: "USD"))
-print("         // added Money with same currency                           PASSED")
-
-print(iPhone.add(2000, currency: "GBP"))
-print("         // added Money with different currency                      PASSED")
-
-print(iPhone.subtract(1000, currency: "GBP"))
-print("         // subtracted Money with different currency                   PASSED")
-var noMoney = Money(amount: 1000, currency: "Bla")
-print("         // added Money with nonexistant currency  - auto switch to USD.     PASSED")
-print(noMoney.currency)
-print("")
-
-April.spouse = Andrew
-print("         // set April's spouse = Andrew                              PERSON  Test PASSED")
-
-April.spouse!.toString()
-print("         // printed April's spouse's string rep.                     PERSON  Test PASSED")
-
-Andrew.spouse = April
-print("         // set Andrew's spouse              .                     PERSON  Test PASSED")
-
-Andrew.spouse!.toString()
-print("         // Test spouse.toString                                  PERSON  Test PASSED")
-
-var Football = Job(title: "Football Player")
-
-Football.salaryHour = 128
-print("         // set Hourly salary              .                     PERSON  Test PASSED")
-
-print(Football.salaryHour!)
-print("         // prints Hourly wage             .                     PERSON  Test PASSED")
-
-print(Football.calculateIncome(40))
-print("         // calculate Income works             .                     PERSON  Test PASSED")
-
-var BeforeFam = Family(members: [Person]())
-print("         // Declaring a family works          .                     PERSON  Test PASSED")
-
-Andrew.job = Football
-
-var Child = Person(firstName: "Chucky", lastName: "Doll", age: 0)
-var Kid = Person(firstName: "Jerky", lastName: "Beef", age: 20)
-
-BeforeFam.haveChild(Child)
-print("           // Test Have Child   age == 0                                  Passed")
-
-BeforeFam.haveChild(Kid)
-print("           // Test Have Child   age > 0 , blocked                            Passed")
-
-BeforeFam.members.append(Andrew)
-BeforeFam.members.append(April)
-print("             // Adding family memebrs                                Passed")
-
-var Dev = Job(title: "Developer")
-Dev.salaryYear = 86000
-
-Vivian.job = Dev
-print(BeforeFam.householdIncome())
-print("           // Test household income                                     Passed")
-
-
-var WoodsFam = Family(members: [Person]())
-print("             // Add household with age < 21                          Passed")
-WoodsFam.members.append(Vivian)
-print("             // Members age < 21 receives illegal message                Passed")
-WoodsFam.members.append(Benny)
-print("             // illegal message  removes properly               Passed")
-
-print(WoodsFam.householdIncome())
-print("             // One Person Household income                          Passed")
-
-
-var Librarian = Job(title: "Librarian")
-print("         // declared job Librariab                           Job  Test PASSED")
-print("")
-
-Librarian.salaryYear = 97380
-print("         // set Librarian yearly = 97380                     Job  Test PASSED")
-print("")
-
-April.job = Librarian
-print("         // set April's job = Librarian          Job  Test PASSED")
-print("")
-
-print(April.job!.title)
-print("         // print April's job's title'           Job Test PASSED")
-print("")
-
-Derry.toString()
-print("         // called  toString() method            PERSON  Test PASSED")
-print("")
-
-var ContractsAnalyst = Job(title: "Contracts Analyst")
-print("         // declared  Job var ContractsAnalyst   Job     Test PASSED")
-print("")
-
-ContractsAnalyst.salaryYear = 70000
-print("         // added  yearly salary to Job          Job     Test PASSED")
-print("")
-
-print(ContractsAnalyst.raise(20))
-print("         // printed the 20percent raise          Job     Test PASSED")
-print("")
-
-var Barista = Job(title: "Barista")
-print("         // Declared new Job                     Job     Test PAASED")
-print("")
-
-Barista.salaryHour = 10.50
-print("         // added  hourly salary to job          Job     Test PASSED")
-print("")
-
-print(Barista.salaryHour!)
-print("         // printed  Barista hourly salary       Job     Test PASSED")
-print("")
-
-print(Barista.calculateIncome(40))
-print("         // calc'd&printed Barista 40hr incomJob     Test PASSED")
-print("")
-
-print(Barista.raise(20))
-print("         // printed  the 20percent raise         Job     Test PASSED")
+Fam.members.append(me)          // add family members
+Fam.members.append(Andrew)      // add family members
+Fam.members.append(Benny)       // add family members
+print("     print all Family members, should include all three names")
+print(Fam.description)          // print family description
 print("")
 
 
+print("     Testing Mathematics.")
+print("")
+print("     declare Money USD40 using double: value is USD 40.0")
+var USD40 = 40.USD
 
+print("     print Money using description")
+print(USD40.description)
 
+print("     declare Money CAN10 using double, value is CAN 10.0")
+var CAN10 = 10.CAN
 
+print("     print Money using description")
+print(CAN10.description)
+print("     subtract 10CAN from 40 USD - result should  be 40 CAN")
+print(USD40.subtractMoney(CAN10).description)
+print("     add 10CAN to 40 USD - result should  be 60 CAN")
+print(USD40.addMoney(CAN10).description)
+print("     declare Money CAN20 using double, value is CAN 20.0")
+var CAN20 = 20.CAN
+print("     print Money using description")
+print(CAN20.description)
+print("     Test Mathematics on same currency. Subtract 10CAN from 20 CAN - result should  be 10 CAN")
+print(CAN20.subtractMoney(CAN10))
 
+print("     declare Jobs, should be Contracts Analyst")
+var Jobs = Job(title: "Contracts Analyst")
+print("     set Contracts Analyst hourly to be 42")
+Jobs.salaryHour = 42.0
+print("     print Job using Description. should be descriptive")
+print(Jobs.description)
+print("     set Derry's job as Contracts Analyst")
+me.job = Jobs
+print("     print Derry using Description. Should include Spouse and Job information")
+print(me.description)
 
-
-
+print("")
+print("")
+print("")
+print("         Conclusion:")
+print("         Description works on all types and returns human-readable stuff")
+print("         Mathematics can remove and add Money regardless of currency and amount and is defined on Money")
+print("         Money can be declared using Double")
+print("")
